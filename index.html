@@ -1,0 +1,40 @@
+<input type="file" id="fileInput" accept="image/*,video/*,audio/*" style="display:none" />
+<button type="button" onclick="document.getElementById('fileInput').click()">📎</button>
+
+<script>
+  const fileInput = document.getElementById('fileInput');
+
+  fileInput.addEventListener('change', function() {
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+      const data = {
+        name: file.name,
+        type: file.type,
+        body: e.target.result // This is the Base64 string
+      };
+      socket.emit('upload', data);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  socket.on('chat message', function(data) {
+    const item = document.createElement('li');
+    
+    // Check if the message is a file or text
+    if (typeof data === 'string') {
+      item.textContent = data;
+    } else {
+      // Logic to render different file types
+      if (data.type.startsWith('image/')) {
+        item.innerHTML = `<img src="${data.body}" style="max-width:300px;" />`;
+      } else if (data.type.startsWith('video/')) {
+        item.innerHTML = `<video controls style="max-width:300px;"><source src="${data.body}"></video>`;
+      } else if (data.type.startsWith('audio/')) {
+        item.innerHTML = `<audio controls><source src="${data.body}"></audio>`;
+      }
+    }
+    document.getElementById('messages').appendChild(item);
+  });
+</script>
